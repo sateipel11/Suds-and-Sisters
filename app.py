@@ -20,7 +20,7 @@ def reserveMachine(machine, user):
         machines[machine] = user
         return True
 
-def inputUser(time, machines, user):
+#def inputUser(time, machines, user):
     
 
 @app.route('/')
