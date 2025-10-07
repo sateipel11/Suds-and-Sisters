@@ -4,21 +4,63 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Phi Mu Laundry</title>
+  <style>
+    .machine {
+      width: 150px;
+      margin: 10px;
+    }
+    .available {
+      border: 3px solid green;
+    }
+    .in-use {
+      border: 3px solid red;
+    }
+    .finished {
+      border: 3px solid orange;
+    }
+  </style>
 </head>
 <body>
-  <nav>
-    <a href="#machines">Machines</a>
-  </nav>
-  <form>
-    <select name="machine">
-      <label> <input type="checkbox" name="machines" value="Right Washer"></label>
-      <label> <input type="checkbox" name="machines" value="Center Washer"></label>
-      <label> <input type="checkbox" name="machines" value="Left Washer"></label>
-      <label> <input type="checkbox" name="machines" value="Left Dryer"></label>
-      <label> <input type="checkbox" name="machines" value="Right Dryer"></label>
-    </select>
+  <h1> Phi Mu Laundry</h1>
+  <h2> Phi Mu Laundry Room: </h2>
+  <h4> The following machines are available (green) or in use (red). User's names and times are listed below.</h4>
+  {% for name, machine in machines.items() %}
+    <div>  
+      <img src="{{ url_for('static', filename='washer.png') }}"
+           alt="{{ name }}"
+           class="machine {{ machine.status }}">
+      <p>{{ name }} — {{ machine.user }}</p>
+    </div>
+  {% endfor %}
+  
+  <h1>Request a Machine: </h1>
+  <p> Disclaimer: This website is dependant on: honesty! Please write  you name and input time to let everyone know who's clothes are ready (so we all don't get a GroupMe message).</p>
+  <h2>Washers Available:</h2>
+  <form method="POST">
+    <label>
+      <input type="checkbox" name="machines" value="Left Washer">Left Washer
+    </label>
+    <label>
+      <input type="checkbox" name="machines" value="Middle Washer">Middle Washer
+    </label>
+    <label>
+      <input type="checkbox" name="machines" value="Right Washer">Right Washer
+    </label>
+  <h2>Dryers Available:</h2>
+    <label>
+      <input type="checkbox" name="machines" value="Left Dryer">Left Dryer
+    </label>
+    <label>
+      <input type="checkbox" name="machines" value="Right Dryer">Right Dryer
+    </label>
+    <br>
+  <label>
+    Your Name:
+    <input type="text" name="username">
+  </label>
+    <br>
+    <button type="submit">Submit</button>
   </form>
-
 
 </body>
 </html>

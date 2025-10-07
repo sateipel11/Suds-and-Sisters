@@ -1,48 +1,76 @@
-from flask import Flask
+from flask import Flask, render_template, request
+import time
 
 app = Flask(__name__)
 
+# Your machine data
 machines = {
-    "Left Washer": None,
-    "Middle Washer": None,
-    "Right Washer ": None,
-    "Left Dryer": None,
-    "Right Dryer": None
+    "Left Washer": {"user": None, "end_time": None, "status": "available"},
+    "Middle Washer": {"user": None, "end_time": None, "status": "available"},
+    "Right Washer": {"user": None, "end_time": None, "status": "available"},
+    "Left Dryer": {"user": None, "end_time": None, "status": "available"},
+    "Right Dryer": {"user": None, "end_time": None, "status": "available"},
 }
 
-#
-#
-#
-#
 
-def reserveMachine(machine, user):
-    if machines[machine] is None:
-        machines[machine] = user
-        return True
+def store_form_data():
+    data = {}
+    data["name"] = request.form.get("username")
+    data["requestedMachine"] = request.form.getlist("machines")
+    return data
 
-#def inputUser(time, machines, user):
+def setTime(machine):
+    if "Washer" in machine:
+        return 30*60
+    if "Dryer" in machine:
+        return 60*60
+    return 0
     
+def get_time_left(machine):
+    end = machines[machine]["end_time"]
+    if end is None:
+        return 0
+    return max(0, int(end - time.time()))
 
-@app.route('/')
+#def is_available(machine):
+#    return machines[machine]["user"] is None or get_time_left(machine) == 0
+
+# Function to reserve a machine
+def reserveMachine(machine, user):
+    if machines[machine]["user"] is None:
+        duration = setTime(machine)
+        machines[machine]["user"] = user
+        machines[machine]["end_time"] = time.time() + duration
+        machines[machine]["status"] = "in-use"
+        return True
+    return False
+
+
+
+# ------------------------
+# Routes — all at top level
+# ------------------------
+
+@app.route("/", methods=["GET", "POST"])
 def home():
-    return '''
-    <h1>Hello, Flask!</h1>
-    <p>Your Flask application is running successfully!</p>
-    <p><a href="/about">Visit About Page</a></p>
-    '''
+    if request.method == "POST":
+        store_form_data()
 
-@app.route('/status')
-def status():
-    return render_template("status.html")
+        for machine in selected:
+            if is_available(machine):
+                machines[machine]["user"] = user
+                machines[machine]["end_time"] = time.time() + get_duration(machine)
 
-@app.route('/home')
-def home():
-    return render_template("home.html")
-
-@app.route('/reserve')
-def reserve():
-    return render_template("reserve.html")
+    # Send current machine status to the template
+    return render_template("home.html", machines=machines)
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+
+# ------------------------
+# Run the app
+# ------------------------
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
+
+#def main():
+#    return 0
