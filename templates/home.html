@@ -16,7 +16,7 @@
       border: 3px solid red;
     }
     .finished {
-      border: 3px solid orange;
+      border: 3px solid yellow;
     }
   </style>
 </head>
@@ -24,16 +24,32 @@
   <h1> Phi Mu Laundry</h1>
   <h2> Phi Mu Laundry Room: </h2>
   <h4> The following machines are available (green) or in use (red). User's names and times are listed below.</h4>
-  {% for name, machine in machines.items() %}
-    <div>  
-      <img src="{{ url_for('static', filename='washer.png') }}"
-           alt="{{ name }}"
-           class="machine {{ machine.status }}">
-      <p>{{ name }} — {{ machine.user }}</p>
-    </div>
-  {% endfor %}
+  {% set display_order = ["Left Washer", "Left Dryer", "Middle Washer", "Right Dryer", "Right Washer"] %}
+
+  <div style="display: flex; gap: 20px;">  <!-- horizontal layout -->
+    {% for name in display_order %}
+      {% set machine = machines[name] %}
+      <div style="text-align: center;">
+        <!-- Machine name-->
+        <p><strong>{{ name }}</strong></p>
+
+        <!-- Image -->
+        <img src="{{ url_for('static', filename='washer.png') }}"
+             alt="{{ name }}"
+             class="machine {{ machine.status }}">
+
+        <!-- User name-->
+        <p>{{ machine.user or "Available" }}</p>
+
+        <!-- Time left-->
+        <p>{{ time_left[name] }} left</p>
+      </div>
+    {% endfor %}
+  </div>
+
+
   
-  <h1>Request a Machine: </h1>
+  <h1>Request Machine(s): </h1>
   <p> Disclaimer: This website is dependant on: honesty! Please write  you name and input time to let everyone know who's clothes are ready (so we all don't get a GroupMe message).</p>
   <h2>Washers Available:</h2>
   <form method="POST">
@@ -59,6 +75,30 @@
     <input type="text" name="username">
   </label>
     <br>
+    <input type="hidden" name="form_type" value="reserve">
+    <button type="submit">Submit</button>
+  </form>
+  <h1>Remove Machine(s): </h1>
+  <h2>Washers:</h2>
+  <form method="POST">
+    <label>
+      <input type="checkbox" name="machines" value="Left Washer">Left Washer
+    </label>
+    <label>
+      <input type="checkbox" name="machines" value="Middle Washer">Middle Washer
+    </label>
+    <label>
+      <input type="checkbox" name="machines" value="Right Washer">Right Washer
+    </label>
+  <h2>Dryers:</h2>
+    <label>
+      <input type="checkbox" name="machines" value="Left Dryer">Left Dryer
+    </label>
+    <label>
+      <input type="checkbox" name="machines" value="Right Dryer">Right Dryer
+    </label>
+    <br>
+    <input type="hidden" name="form_type" value="remove">
     <button type="submit">Submit</button>
   </form>
 

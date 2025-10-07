@@ -3,7 +3,7 @@ import time
 
 app = Flask(__name__)
 
-# Your machine data
+# Machine data
 machines = {
     "Left Washer": {"user": None, "end_time": None, "status": "available"},
     "Middle Washer": {"user": None, "end_time": None, "status": "available"},
@@ -19,21 +19,33 @@ def store_form_data():
     data["requestedMachine"] = request.form.getlist("machines")
     return data
 
+#TIMER FUNCTIONS
 def setTime(machine):
     if "Washer" in machine:
         return 30*60
     if "Dryer" in machine:
         return 60*60
     return 0
-    
 def get_time_left(machine):
     end = machines[machine]["end_time"]
     if end is None:
         return 0
     return max(0, int(end - time.time()))
+#function to display minutes left for the front-end 
+def get_time_left_minutes(machine):
+    seconds_left = get_time_left(machine)
+    if seconds_left >= 60:
+        return f"{seconds_left // 60} min"
+    elif seconds_left > 0:
+        return f"{seconds_left} sec"
+    else:
+        return "0 sec"
 
-#def is_available(machine):
-#    return machines[machine]["user"] is None or get_time_left(machine) == 0
+#RESERVING FUNCTIONS
+#check if machine can be reserved (if available)
+def is_available(machine):
+    return machines[machine]["status"] == "available"
+
 
 # Function to reserve a machine
 def reserveMachine(machine, user):
@@ -44,6 +56,17 @@ def reserveMachine(machine, user):
         machines[machine]["status"] = "in-use"
         return True
     return False
+    
+def update_machine_times():
+    for machine in machines:
+        if get_time_left(machine) <= 0 and machines[machine]["status"] == "in-use":
+            machines[machine]["status"] = "finished"
+
+def clear_machine(machine):
+    machines[machine]["user"] = None
+    machines[machine]["end_time"] = None
+    machines[machine]["status"] = "available"
+
 
 
 
@@ -53,16 +76,34 @@ def reserveMachine(machine, user):
 
 @app.route("/", methods=["GET", "POST"])
 def home():
+    # Update machines automatically if timers done
+    update_machine_times()
+
     if request.method == "POST":
-        store_form_data()
+        data = store_form_data()
+        user = data["name"]
+        selected = data["requestedMachine"]
 
-        for machine in selected:
-            if is_available(machine):
-                machines[machine]["user"] = user
-                machines[machine]["end_time"] = time.time() + get_duration(machine)
+        #which form was submitted
+        form_type = request.form.get("form_type")
 
-    # Send current machine status to the template
-    return render_template("home.html", machines=machines)
+        if form_type == "reserve":
+            if user.strip() != "":  # only reserve if user entered a name
+                for machine in selected:
+                    if is_available(machine):
+                        reserveMachine(machine, user)
+
+        elif form_type == "remove":
+            # Clear selected
+            for machine in selected:
+                clear_machine(machine)
+
+    # Calculate time left in minutes
+    time_left_minutes = {m: get_time_left_minutes(m) for m in machines}
+
+    # Render template
+    return render_template("home.html", machines=machines, time_left=time_left_minutes)
+
 
 
 
